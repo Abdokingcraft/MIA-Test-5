@@ -1,4 +1,4 @@
-# Audio Noise Reduction — How I Did It
+# Audio Noise Reduction 
 
 ## The Problem
 
