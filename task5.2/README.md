@@ -174,3 +174,27 @@ output_path = os.path.join(output_dir, base_name + ".txt")
 ```
 If no ball is found, it's just left out of labels, so the txt file may have 0, 1, or 2 lines.
 
+
+
+### **5- Handling the size-mismatch vulnerability** :
+
+While testing on the full image set, I noticed a vulnerability: some images have a small red or blue speck close to the real ball, and since it passes the same color/area filtering, extract_ball would sometimes pick it up as a second detection instead of noise. This mostly happened when the real ball and the noise blob were close together but had very different sizes.
+
+![error](images/error1)
+
+
+![error2](images/error2)
+
+To catch this, we compare the radius of the two detected circles from detect_circle. If one ball's radius is less than half the other's, it's treated as noise and dropped before it becomes a label:
+```python
+red_r = red_circle[2] if red_circle is not None else None
+blue_r = blue_circle[2] if blue_circle is not None else None
+
+if red_r is not None and blue_r is not None:
+    if red_r < blue_r / 2:
+        red_bbox = None
+    elif blue_r < red_r / 2:
+        blue_bbox = None
+```
+
+This way, a ball flagged as noise never gets drawn or printed either — it's dropped consistently everywhere.
