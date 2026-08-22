@@ -1,23 +1,7 @@
-"""
-TRAINING '27 - Task 5 - Task 1.2: Detect the Pattern
-
-This uses the exact color thresholds, morphology, and contour-scoring
-logic already developed and tuned (see aintballin.ipynb) for detecting
-the red and blue balls. The only things added here are:
-  - a loop over all images in a folder
-  - writing each image's detection(s) to a YOLO-format .txt label file
-
-Label format per line (as required):
-    <class_id> <x_center> <y_center> <width> <height>   (all normalized 0-1)
-    class_id: 0 = Blue, 1 = Red
-"""
-
 import os
 import glob
 import cv2
 import numpy as np
-
-
 
 
 def get_masks(resized):
@@ -39,8 +23,6 @@ def get_masks(resized):
     return red_mask, blue_mask
 
 
-
-
 def extract_ball(mask, resized, area_fraction=0.18, label="Ball"):
     total_pixels = cv2.countNonZero(mask)
     contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -53,23 +35,14 @@ def extract_ball(mask, resized, area_fraction=0.18, label="Ball"):
             area_fraction = 0.12
         if total_pixels == 0 or area < area_fraction * total_pixels:
             continue
-        perimeter = cv2.arcLength(c, True)
-        if perimeter == 0:
-            continue
-        circularity = 4 * np.pi * area / (perimeter ** 2)
-        if label == "Blue Ball":
-            M = cv2.moments(c)
-            cx, cy = M['m10'] / M['m00'], M['m01'] / M['m00']
-            pts = c.reshape(-1, 2)
-            dists = np.sqrt((pts[:, 0] - cx) ** 2 + (pts[:, 1] - cy) ** 2)
-            roundness = 1 - (np.std(dists) / np.mean(dists))
-        if label == "Blue Ball" and roundness > best_score:
+        M = cv2.moments(c)
+        cx, cy = M['m10'] / M['m00'], M['m01'] / M['m00']
+        pts = c.reshape(-1, 2)
+        dists = np.sqrt((pts[:, 0] - cx) ** 2 + (pts[:, 1] - cy) ** 2)
+        roundness = 1 - (np.std(dists) / np.mean(dists))
+        if roundness > best_score:
             best_score = roundness
             best_contour = c
-        elif label == "Red Ball" and circularity > best_score:
-            best_score = circularity
-            best_contour = c
-
     if best_contour is None:
         print(f"No {label.lower()} found")
         return None, None, None
@@ -77,15 +50,34 @@ def extract_ball(mask, resized, area_fraction=0.18, label="Ball"):
     ball_mask = np.zeros_like(mask)
     cv2.drawContours(ball_mask, [best_contour], -1, 255, thickness=cv2.FILLED)
     ball_only = cv2.bitwise_and(resized, resized, mask=ball_mask)
-
     ball_gray = cv2.cvtColor(ball_only, cv2.COLOR_BGR2GRAY)
-
-    # Addition: bounding box of the chosen contour, for the label file
-    bbox = cv2.boundingRect(best_contour)  # (x, y, w, h)
+    bbox = cv2.boundingRect(best_contour)
 
     return ball_only, ball_gray, bbox
 
 
+def detect_circle(ball_gray, label="Ball", min=10):
+    if ball_gray is None:
+        print(f"No {label.lower()} to detect a circle in")
+        return None
+
+    if label == "Red Ball":
+        param1 = 20
+    elif label == "Blue Ball":
+        param1 = 35
+
+    blurred = cv2.GaussianBlur(ball_gray, (9, 9), 25)
+    circles = cv2.HoughCircles(blurred, cv2.HOUGH_GRADIENT, dp=1, minDist=20,
+                                param1=param1, param2=20, minRadius=min, maxRadius=10000)
+
+    if circles is None:
+        print(f"No circle found for {label}")
+        return None
+
+    circles = np.round(circles[0, :]).astype(int)
+    x, y, r = circles[0]
+
+    return (x, y, r)
 
 
 def bbox_to_yolo(bbox, img_w, img_h):
@@ -100,8 +92,7 @@ def bbox_to_yolo(bbox, img_w, img_h):
 def write_label_file(labels, output_path):
     with open(output_path, "w") as f:
         for class_id, x_c, y_c, w, h in labels:
-            f.write(f"{class_id} {x_c:.6f} {y_c:.6f} {w:.6f} {h:.6f}\n")
-
+            f.write(f"{class_id} {x_c:.2f} {y_c:.2f} {w:.2f} {h:.2f}\n")
 
 
 def process_folder(images_dir, output_dir):
@@ -111,25 +102,36 @@ def process_folder(images_dir, output_dir):
         glob.glob(os.path.join(images_dir, "*.jpg"))
     )
 
-
     for image_path in image_paths:
         bgr = cv2.imread(image_path)
         img = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
         h, w = img.shape[:2]
-        resized = img  
+        resized = img
 
         red_mask, blue_mask = get_masks(resized)
 
-        _, _, red_bbox = extract_ball(red_mask, resized, label="Red Ball")
-        _, _, blue_bbox = extract_ball(blue_mask, resized, label="Blue Ball")
+        _, red_ball_gray, red_bbox = extract_ball(red_mask, resized, label="Red Ball")
+        _, blue_ball_gray, blue_bbox = extract_ball(blue_mask, resized, label="Blue Ball")
+
+        red_circle = detect_circle(red_ball_gray, label="Red Ball")
+        blue_circle = detect_circle(blue_ball_gray, label="Blue Ball")
+
+        red_r = red_circle[2] if red_circle is not None else None
+        blue_r = blue_circle[2] if blue_circle is not None else None
+
+        if red_r is not None and blue_r is not None:
+            if red_r < blue_r / 2:
+                red_bbox = None
+            elif blue_r < red_r / 2:
+                blue_bbox = None
 
         labels = []
         if red_bbox is not None:
             x_c, y_c, bw, bh = bbox_to_yolo(red_bbox, w, h)
-            labels.append((1, x_c, y_c, bw, bh))  
+            labels.append((1, x_c, y_c, bw, bh))
         if blue_bbox is not None:
             x_c, y_c, bw, bh = bbox_to_yolo(blue_bbox, w, h)
-            labels.append((0, x_c, y_c, bw, bh)) 
+            labels.append((0, x_c, y_c, bw, bh))
 
         base_name = os.path.splitext(os.path.basename(image_path))[0]
         output_path = os.path.join(output_dir, base_name + ".txt")
@@ -139,7 +141,7 @@ def process_folder(images_dir, output_dir):
 
 
 if __name__ == "__main__":
-    IMAGES_DIR = "balls/"   # folder containing the 20 provided input images
-    OUTPUT_DIR = "labels/"   # folder where the .txt label files will be written
+    IMAGES_DIR = "balls/"
+    OUTPUT_DIR = "labels/"
 
     process_folder(IMAGES_DIR, OUTPUT_DIR)
