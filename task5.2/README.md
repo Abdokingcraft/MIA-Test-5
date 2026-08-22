@@ -180,10 +180,10 @@ If no ball is found, it's just left out of labels, so the txt file may have 0, 1
 
 While testing on the full image set, I noticed a vulnerability: some images have a small red or blue speck close to the real ball, and since it passes the same color/area filtering, extract_ball would sometimes pick it up as a second detection instead of noise. This mostly happened when the real ball and the noise blob were close together but had very different sizes.
 
-![error](images/error1)
+![error](images/error1.png)
 
 
-![error2](images/error2)
+![error2](images/error2.png)
 
 To catch this, we compare the radius of the two detected circles from detect_circle. If one ball's radius is less than half the other's, it's treated as noise and dropped before it becomes a label:
 ```python
