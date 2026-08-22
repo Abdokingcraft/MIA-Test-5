@@ -44,7 +44,7 @@ total_pixels = cv2.countNonZero(mask)
 contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 ```
 
-![Contour](Images/Contour.png)
+![Contour](images/Contour.png)
 
 Then it loops through all the objects and check
 If there is no pixel (there is nothing detected) then it skips
@@ -69,7 +69,7 @@ dists = np.sqrt((pts[:,0]-cx)**2 + (pts[:,1]-cy)**2)
 roundness = 1 - (np.std(dists) / np.mean(dists))
 ```
 
-![Centers](Images/Centers.png)
+![Centers](images/Centers.png)
 
 
 
@@ -135,4 +135,4 @@ print(f"{label}: center=({x},{y}) r={r}, {len(circles)} circle(s) detected")
 
 
 
-![balls](Images/balls.png)
+![balls](images/balls.png)
