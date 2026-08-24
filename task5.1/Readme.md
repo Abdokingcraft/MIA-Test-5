@@ -1,7 +1,5 @@
 # An Audio Journey
 
-[The code](#the-code)
-
 At first when I heard the audio at 100% Volume my ears went **~~ÂÂÁÃÅÀ~~** could have at least left an audio warning at the beginning or even a text when sending it
 
 After that I checked the spectrogram with audacity it was full to the sky
