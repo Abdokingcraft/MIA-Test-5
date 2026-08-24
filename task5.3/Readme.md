@@ -147,7 +147,7 @@ The original and adversarial images may look identical to the human eye, but to 
 
 the noise the rainbow color + black and white
 
-![fgms.png](/home/abdocraft/Pictures/fgms.png)
+![fgms.png](/images/fgms.png)
 
 
 
@@ -281,7 +281,7 @@ On the right is the Grad-CAM overlay same idea, but based on the last convolutio
 
 Both maps should roughly agree on where the model is "looking," since they're explaining the same clean prediction this is the baseline to compare against once adversarial attacks get involved in Phase 4.
 
-![explain\_demo](/home/abdocraft/Pictures/explain.png)
+![explain\_demo](/images/explain.png)
 
 ---
 
@@ -342,7 +342,7 @@ Bottom row: the adversarial image with its new (wrong) prediction, the amplified
 
 
 
-![output.png](/home/abdocraft/Pictures/output.png)
+![output.png](/images/output.png)
 
 ---
 
