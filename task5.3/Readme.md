@@ -281,7 +281,7 @@ On the right is the Grad-CAM overlay same idea, but based on the last convolutio
 
 Both maps should roughly agree on where the model is "looking," since they're explaining the same clean prediction this is the baseline to compare against once adversarial attacks get involved in Phase 4.
 
-![explain\_demo](/images/explain.png)
+![explain](images/explain.png)
 
 ---
 
