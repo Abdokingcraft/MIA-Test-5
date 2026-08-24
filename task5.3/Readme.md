@@ -147,7 +147,7 @@ The original and adversarial images may look identical to the human eye, but to 
 
 the noise the rainbow color + black and white
 
-![fgms.png](/images/fgms.png)
+![fgms.png](images/fgms.png)
 
 
 
@@ -342,7 +342,7 @@ Bottom row: the adversarial image with its new (wrong) prediction, the amplified
 
 
 
-![output.png](/images/output.png)
+![output.png](images/output.png)
 
 ---
 
