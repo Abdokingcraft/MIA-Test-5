@@ -67,4 +67,4 @@ y_work = y_work[int(sr * 0.03):int(sr * 0.45)]
 Cuts the audio down to just the 0.03s–0.45s window where the actual speech is, dropping everything else.
 
 
-the expected transcript is "Task Done"
+the expected transcript is "Task Done" and it is saved at "word.wav"
